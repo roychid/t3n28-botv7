@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>t3n28-bot - European Sports Betting Analysis</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: Arial; background:#0a0a0a; color:#fff; padding:20px; }
+    .container { max-width:1400px; margin:0 auto; }
+    header { text-align:center; margin-bottom:30px; padding-bottom:20px; border-bottom:2px solid #00ff00; }
+    h1 { font-size:28px; color:#00ff00; margin-bottom:5px; }
+    .subtitle { color:#888; font-size:14px; }
+    
+    /* Sport Tabs */
+    .sport-tabs { display:flex; gap:10px; margin-bottom:20px; }
+    .sport-tab { padding:10px 20px; background:#1a1a1a; border:1px solid #333; border-radius:4px; cursor:pointer; }
+    .sport-tab.active { background:#00ff00; color:#000; border-color:#00ff00; }
+    .sport-tab:hover { background:#333; }
+    
+    .controls { background:#1a1a1a; padding:20px; border-radius:8px; margin-bottom:30px; border:1px solid #333; }
+    .control-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+    .filter-group { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    input, select { padding:10px; background:#0a0a0a; border:1px solid #00ff00; color:#fff; border-radius:4px; font-size:14px; }
+    input:focus, select:focus { outline:none; border-color:#00ff00; box-shadow:0 0 5px rgba(0,255,0,0.3); }
+    button { padding:10px 20px; background:#00ff00; color:#000; border:none; border-radius:4px; font-weight:bold; cursor:pointer; font-size:14px; }
+    button:hover { background:#00cc00; }
+    button:active { background:#009900; }
+    .btn-secondary { background:#333; color:#00ff00; border:1px solid #00ff00; }
+    .btn-secondary:hover { background:#444; }
+    .btn-small { padding:5px 10px; font-size:12px; }
+    
+    /* Bet Slip */
+    .bet-slip-container { position:fixed; right:20px; top:20px; width:350px; background:#1a1a1a; border:2px solid #00ff00; border-radius:8px; padding:15px; z-index:1000; max-height:80vh; overflow-y:auto; }
+    .bet-slip-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid #333; }
+    .bet-slip-title { color:#00ff00; font-weight:bold; }
+    .bet-slip-close { color:#ff4444; cursor:pointer; font-size:20px; }
+    .bet-slip-item { background:#0a0a0a; padding:10px; margin-bottom:10px; border-radius:4px; border:1px solid #333; }
+    .bet-slip-item-header { display:flex; justify-content:space-between; margin-bottom:5px; }
+    .bet-slip-item-remove { color:#ff4444; cursor:pointer; font-size:12px; }
+    .bet-slip-total { margin-top:15px; padding-top:10px; border-top:1px solid #333; text-align:right; font-weight:bold; }
+    .bet-slip-actions { display:flex; gap:10px; margin-top:15px; }
+    
+    /* Match Selection */
+    .match-selection-controls { background:#111; padding:15px; border-radius:6px; margin-bottom:20px; }
+    .selection-count { display:inline-block; background:#00ff00; color:#000; padding:5px 10px; border-radius:4px; margin-left:10px; font-weight:bold; }
+    
+    .games-list { display:grid; gap:20px; }
+    .game-card { background:#1a1a1a; border:2px solid #333; border-radius:8px; padding:20px; transition:all 0.3s; }
+    .game-card.selected { border-color:#00ff00; background:rgba(0,255,0,0.05); }
+    .game-card.soccer { border-left:4px solid #00ff00; }
+    .game-card.basketball { border-left:4px solid #ff8800; }
+    
+    .game-header { display:flex; justify-content:space-between; margin-bottom:20px; padding-bottom:10px; border-bottom:1px solid #333; }
+    .league { color:#00ff00; font-size:12px; font-weight:bold; }
+    .time { color:#888; font-size:12px; }
+    .sport-badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:bold; margin-right:5px; }
+    .soccer-badge { background:#00ff00; color:#000; }
+    .basketball-badge { background:#ff8800; color:#000; }
+    
+    .teams { display:grid; grid-template-columns:1fr auto 1fr; gap:20px; margin-bottom:20px; align-items:center; }
+    .team { text-align:center; }
+    .team-name { font-size:18px; font-weight:bold; margin-bottom:10px; }
+    .team-logo { height:40px; margin-bottom:10px; }
+    .form { display:flex; gap:5px; justify-content:center; }
+    .form-box { width:22px; height:22px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:bold; border-radius:3px; }
+    .W { background:#00ff00; color:#000; }
+    .D { background:#666; color:#fff; }
+    .L { background:#ff0000; color:#fff; }
+    .vs { font-size:18px; color:#666; font-weight:bold; text-align:center; }
+    
+    /* Odds Section */
+    .odds-section { margin:20px 0; }
+    .odds-title { color:#00ff00; font-size:14px; margin-bottom:10px; }
+    .odds-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(100px, 1fr)); gap:10px; }
+    .odd-box { background:#0a0a0a; padding:15px; border-radius:4px; border:1px solid #333; text-align:center; cursor:pointer; transition:all 0.2s; }
+    .odd-box:hover { border-color:#00ff00; background:#111; }
+    .odd-box.selected { background:#00ff00; color:#000; border-color:#00ff00; }
+    .odd-label { font-size:11px; color:#888; margin-bottom:5px; }
+    .odd-value { font-size:18px; font-weight:bold; }
+    .odd-probability { font-size:10px; color:#666; margin-top:3px; }
+    
+    .stats { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:15px; margin-bottom:20px; }
+    .stat { background:#0a0a0a; padding:12px; border-radius:4px; border:1px solid #333; }
+    .stat-label { font-size:11px; color:#888; margin-bottom:5px; text-transform:uppercase; }
+    .stat-value { display:flex; justify-content:space-between; font-size:16px; font-weight:bold; }
+    .stat-home { color:#00ff00; }
+    .stat-away { color:#fff; }
+    
+    .advice { background:#0a0a0a; padding:15px; border-radius:4px; border-left:3px solid #00ff00; }
+    .advice-title { color:#00ff00; font-size:14px; font-weight:bold; margin-bottom:10px; }
+    .advice-text { color:#ccc; font-size:13px; line-height:1.6; margin-bottom:10px; }
+    .recommendation { display:inline-block; background:#00ff00; color:#000; padding:8px 15px; border-radius:4px; font-weight:bold; font-size:13px; margin-right:10px; }
+    .confidence { color:#888; font-size:12px; }
+    
+    .loading, .no-games { text-align:center; padding:40px; color:#888; }
+    .no-games { background:#1a1a1a; border-radius:8px; border:1px solid #333; }
+    
+    /* Multi-match combos */
+    .combos-section { background:#111; padding:20px; border-radius:8px; margin-top:30px; border:1px solid #333; }
+    .combo-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:15px; margin-top:15px; }
+    .combo-card { background:#1a1a1a; padding:15px; border-radius:6px; border:1px solid #333; }
+    .combo-matches { font-size:12px; color:#888; margin-bottom:10px; }
+    .combo-odds { font-size:20px; font-weight:bold; color:#00ff00; }
+    .combo-stake { margin-top:10px; display:flex; gap:10px; }
+    .combo-stake input { flex:1; }
+    
+    /* Loading animation */
+    .loading { text-align: center; padding: 60px 20px; color: #00ff00; font-size: 16px; }
+    .loading:after { content: ''; display: inline-block; width: 20px; height: 20px; border: 2px solid #00ff00; border-radius: 50%; border-top-color: transparent; animation: spin 1s linear infinite; margin-left:10px; vertical-align:middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    .probability-bar { display: flex; height: 6px; background: #333; border-radius: 3px; margin: 10px 0; overflow: hidden; }
+    .probability-home { background: #00ff00; }
+    .probability-draw { background: #666; }
+    .probability-away { background: #fff; }
+    
+    .insight-badge { display: inline-block; background: rgba(0, 255, 0, 0.1); color: #00ff00; padding: 3px 8px; border-radius: 10px; font-size: 10px; margin: 2px; }
+    .select-match-btn { margin-top:15px; padding:8px 15px; width:100%; background:#333; color:#00ff00; border:1px solid #00ff00; border-radius:4px; cursor:pointer; }
+    .select-match-btn.selected { background:#00ff00; color:#000; }
+    .select-match-btn:hover { background:#444; }
+    
+    /* League Groups */
+    .league-group { margin-bottom:30px; }
+    .league-group-header { background:#111; padding:10px 15px; border-radius:6px; margin-bottom:15px; border-left:4px solid #00ff00; }
+    
+    /* Basketball specific */
+    .basketball-stat { grid-template-columns:repeat(auto-fit, minmax(120px,1fr)); }
+    .quarter-scores { display:flex; gap:10px; justify-content:center; margin:10px 0; }
+    .quarter-score { background:#0a0a0a; padding:5px 10px; border-radius:4px; font-size:11px; }
+    
+    /* Analysis details */
+    .analysis-details { margin-top:10px; padding:10px; background:#0f0f0f; border-radius:6px; border:1px solid #222; font-size:12px; color:#bbb; display:none; white-space:pre-wrap; }
+    .show-details-btn { margin-left:10px; background:#222; color:#00ff00; padding:6px 8px; border-radius:4px; font-size:12px; border:1px solid #00ff00; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>⚽🏀 EUROPEAN SPORTS BETTING ANALYSIS</h1>
+      <p class="subtitle">AI-Powered Predictions with Real Odds & Historical Data</p>
+    </header>
+
+    <!-- Sport Selection Tabs -->
+    <div class="sport-tabs">
+      <div class="sport-tab active" onclick="switchSport('soccer', this)">⚽ Soccer</div>
+      <div class="sport-tab" onclick="switchSport('basketball', this)">🏀 Basketball</div>
+      <div class="sport-tab" onclick="switchSport('both', this)">⚽🏀 Both</div>
+    </div>
+
+    <!-- Bet Slip -->
+    <div class="bet-slip-container" id="betSlip">
+      <div class="bet-slip-header">
+        <div class="bet-slip-title">🎯 BET SLIP (<span id="betCount">0</span>)</div>
+        <div class="bet-slip-close" onclick="toggleBetSlip()">×</div>
+      </div>
+      <div id="betSlipItems"></div>
+      <div class="bet-slip-total">
+        Total Odds: <span id="totalOdds">1.00</span><br>
+        Potential Win: €<span id="potentialWin">0.00</span>
+      </div>
+      <div class="bet-slip-actions">
+        <input type="number" id="stakeAmount" placeholder="Stake (€)" min="1" value="10" style="flex:1;">
+        <button onclick="placeBet()" class="btn-small">Place Bet</button>
+        <button onclick="clearBetSlip()" class="btn-small btn-secondary">Clear All</button>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div class="control-row">
+        <input type="date" id="dateInput" />
+        <select id="leagueSelect">
+          <option value="">All European Leagues</option>
+          <optgroup label="Top 5 Leagues">
+            <option value="39">England: Premier League</option>
+            <option value="140">Spain: La Liga</option>
+            <option value="78">Germany: Bundesliga</option>
+            <option value="135">Italy: Serie A</option>
+            <option value="61">France: Ligue 1</option>
+          </optgroup>
+          <optgroup label="Other European Leagues">
+            <option value="94">Portugal: Primeira Liga</option>
+            <option value="88">Netherlands: Eredivisie</option>
+            <option value="144">Belgium: Jupiler Pro League</option>
+            <option value="203">Turkey: Süper Lig</option>
+            <option value="218">Austria: Bundesliga</option>
+            <option value="119">Scotland: Premiership</option>
+            <option value="253">Switzerland: Super League</option>
+            <option value="106">Greece: Super League</option>
+            <option value="283">Denmark: Superliga</option>
+            <option value="268">Russia: Premier League</option>
+            <option value="271">Ukraine: Premier League</option>
+            <option value="299">Poland: Ekstraklasa</option>
+            <option value="197">Czech Republic: First League</option>
+            <option value="310">Romania: Liga I</option>
+            <option value="332">Norway: Eliteserien</option>
+            <option value="325">Sweden: Allsvenskan</option>
+            <option value="319">Finland: Veikkausliiga</option>
+            <option value="433">Hungary: NB I</option>
+            <option value="445">Croatia: HNL</option>
+            <option value="103">Serbia: SuperLiga</option>
+            <option value="498">Slovakia: Fortuna Liga</option>
+            <option value="529">Slovenia: PrvaLiga</option>
+          </optgroup>
+          <optgroup label="European Competitions">
+            <option value="2">UEFA Champions League</option>
+            <option value="3">UEFA Europa League</option>
+            <option value="848">UEFA Conference League</option>
+            <option value="143">Euro Championship</option>
+          </optgroup>
+        </select>
+        <select id="countrySelect">
+          <option value="">All Countries</option>
+          <option value="England">England</option>
+          <option value="Spain">Spain</option>
+          <option value="Germany">Germany</option>
+          <option value="Italy">Italy</option>
+          <option value="France">France</option>
+          <option value="Portugal">Portugal</option>
+          <option value="Netherlands">Netherlands</option>
+          <option value="Turkey">Turkey</option>
+          <option value="Russia">Russia</option>
+          <option value="Ukraine">Ukraine</option>
+        </select>
+        <button onclick="loadGames()">LOAD GAMES</button>
+        <button onclick="toggleBetSlip()" class="btn-secondary" id="betSlipBtn">📋 Bet Slip (0)</button>
+      </div>
+      
+      <!-- Multi-match Controls -->
+      <div class="match-selection-controls">
+        <strong>🎯 MULTI-MATCH BETTING:</strong> 
+        <span id="selectedCount" class="selection-count">0 matches selected</span>
+        
+        <div style="display:flex; gap:15px; margin-top:10px; flex-wrap:wrap;">
+          <div class="filter-group">
+            <label style="color:#888;">Stake per combo:</label>
+            <input type="number" id="comboStake" value="5" min="1" max="1000" style="width:80px;">
+          </div>
+          <button onclick="generateCombos(2)" class="btn-small">Generate 2-Match Combos</button>
+          <button onclick="generateCombos(3)" class="btn-small">Generate 3-Match Combos</button>
+          <button onclick="generateCombos(4)" class="btn-small">Generate 4-Match Combos</button>
+          <button onclick="clearSelections()" class="btn-small btn-secondary">Clear Selections</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Output Area -->
+    <div id="output">
+      <div class="loading">Loading European fixtures...</div>
+    </div>
+
+    <!-- Multi-match Combos Section -->
+    <div id="combosSection" class="combos-section" style="display:none;">
+      <h3>🎲 MULTI-MATCH COMBINATIONS</h3>
+      <div id="combosGrid" class="combo-grid"></div>
+    </div>
+    
+    <footer style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #333; color: #666; font-size: 12px;">
+      <p>⚠️ For entertainment purposes only. Always gamble responsibly.</p>
+      <p>Data provided by API-Sports • European sports analysis • Times shown in your local timezone</p>
+    </footer>
+  </div>
+
+  <script>
+    // Configuration
+    let currentSport = 'soccer';
+    const selectedMatches = new Map(); // id string -> fixture object
+    const betSlip = new Map(); // key -> {match, selection, odds}
+
+    document.getElementById('dateInput').valueAsDate = new Date();
+
+    // Switch between sports
+    function switchSport(sport, elem) {
+      currentSport = sport;
+      document.querySelectorAll('.sport-tab').forEach(tab => tab.classList.remove('active'));
+      if (elem) elem.classList.add('active');
+      // adjust leagueSelect options minimally (kept simple)
+      if (sport === 'soccer') {
+        // keep existing soccer list (no change)
+      } else if (sport === 'basketball') {
+        // keep existing basketball list (no change)
+      }
+      loadGames();
+    }
+
+    // Format time in local timezone
+    function formatTime(dateString) {
+      if (!dateString) return "TBD";
+      const date = new Date(dateString);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Get current time in C.A. (Central Africa Time = GMT+2)
+    function getCATime() {
+      return new Date().toLocaleString("en-US", {
+        timeZone: "Africa/Cairo",
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    // Sanitize selection key strings for DOM ids
+    function sanitizeKey(s) {
+      return String(s).replace(/\s+/g, '-').replace(/[^\w\-]/g, '');
+    }
+
+    // Toggle match selection (add/remove from bet slip)
+    function toggleMatchSelection(matchId, selectionType, odds) {
+      const id = String(matchId);
+      const match = selectedMatches.get(id);
+      if (!match) {
+        console.warn('No match found for', id);
+        return;
+      }
+      const key = `${id}_${selectionType}`;
+      if (betSlip.has(key)) {
+        betSlip.delete(key);
+        document.getElementById(`odd-${id}-${sanitizeKey(selectionType)}`)?.classList.remove('selected');
+      } else {
+        betSlip.set(key, { match, selection: selectionType, odds: parseFloat(odds) || parseFloat(odds) });
+        document.getElementById(`odd-${id}-${sanitizeKey(selectionType)}`)?.classList.add('selected');
+      }
+      updateBetSlip();
+      updateSelectionCount();
+    }
+
+    // Update bet slip UI
+    function updateBetSlip() {
+      const betSlipItems = document.getElementById('betSlipItems');
+      let totalOdds = 1;
+      if (betSlip.size === 0) {
+        betSlipItems.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">No bets selected</div>';
+      } else {
+        let html = '';
+        betSlip.forEach((bet, key) => {
+          totalOdds *= parseFloat(bet.odds || 1);
+          const match = bet.match;
+          html += `
+            <div class="bet-slip-item">
+              <div class="bet-slip-item-header">
+                <div>${match.teams.home.name} vs ${match.teams.away.name}</div>
+                <div class="bet-slip-item-remove" onclick="removeFromBetSlip('${key}')">×</div>
+              </div>
+              <div style="font-size:12px;color:#888;">${bet.selection} @ ${bet.odds}</div>
+              <div style="font-size:11px;color:#666;">${match.league.name}</div>
+            </div>
+          `;
+        });
+        betSlipItems.innerHTML = html;
+      }
+      document.getElementById('betCount').textContent = betSlip.size;
+      document.getElementById('totalOdds').textContent = (betSlip.size === 0 ? 1.00 : totalOdds).toFixed(2);
+      document.getElementById('betSlipBtn').textContent = `📋 Bet Slip (${betSlip.size})`;
+      updatePotentialWin();
+    }
+
+    function updatePotentialWin() {
+      const stake = parseFloat(document.getElementById('stakeAmount').value) || 0;
+      const totalOdds = parseFloat(document.getElementById('totalOdds').textContent) || 1;
+      const potentialWin = stake * totalOdds;
+      document.getElementById('potentialWin').textContent = potentialWin.toFixed(2);
+    }
+
+    function removeFromBetSlip(key) {
+      const bet = betSlip.get(key);
+      if (bet) {
+        document.getElementById(`odd-${bet.match.id}-${sanitizeKey(bet.selection)}`)?.classList.remove('selected');
+      }
+      betSlip.delete(key);
+      updateBetSlip();
+      updateSelectionCount();
+    }
+
+    function clearBetSlip() {
+      betSlip.forEach(bet => {
+        document.getElementById(`odd-${bet.match.id}-${sanitizeKey(bet.selection)}`)?.classList.remove('selected');
+      });
+      betSlip.clear();
+      updateBetSlip();
+      updateSelectionCount();
+    }
+
+    function toggleBetSlip() {
+      const slip = document.getElementById('betSlip');
+      slip.style.display = slip.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function placeBet() {
+      if (betSlip.size === 0) { alert('No bets selected!'); return; }
+      const stake = parseFloat(document.getElementById('stakeAmount').value);
+      if (!stake || stake < 1) { alert('Please enter a valid stake amount (min €1)'); return; }
+      const totalOdds = parseFloat(document.getElementById('totalOdds').textContent);
+      const potentialWin = stake * totalOdds;
+      const betRecord = { id: Date.now(), date: new Date().toISOString(), matches: Array.from(betSlip.values()), stake, totalOdds, potentialWin, status: 'pending' };
+      let betHistory = JSON.parse(localStorage.getItem('betHistory') || '[]');
+      betHistory.push(betRecord);
+      localStorage.setItem('betHistory', JSON.stringify(betHistory));
+      alert(`✅ Bet placed!\nStake: €${stake}\nTotal Odds: ${totalOdds.toFixed(2)}\nPotential Win: €${potentialWin.toFixed(2)}`);
+      clearBetSlip();
+    }
+
+    function updateSelectionCount() {
+      document.getElementById('selectedCount').textContent = `${betSlip.size} matches selected`;
+    }
+
+    function clearSelections() {
+      selectedMatches.clear();
+      clearBetSlip();
+      document.querySelectorAll('.game-card').forEach(card => card.classList.remove('selected'));
+      document.querySelectorAll('.odd-box').forEach(box => box.classList.remove('selected'));
+      updateSelectionCount();
+    }
+
+    // Combination generation
+    function generateCombos(matchCount) {
+      if (betSlip.size < matchCount) { alert(`Please select at least ${matchCount} matches first!`); return; }
+      const bets = Array.from(betSlip.values());
+      const combos = [];
+      if (bets.length <= 10) {
+        function combine(arr, k, start=0, cur=[]) {
+          if (cur.length === k) { combos.push(cur.slice()); return; }
+          for (let i=start;i<arr.length;i++){ cur.push(arr[i]); combine(arr,k,i+1,cur); cur.pop(); }
+        }
+        combine(bets, matchCount);
+      }
+      const comboObjs = combos.map(c => ({ matches: c, odds: c.reduce((acc,b)=>acc*parseFloat(b.odds || 1),1).toFixed(2) }));
+      displayCombos(comboObjs);
+    }
+
+    function displayCombos(combos) {
+      const section = document.getElementById('combosSection');
+      const grid = document.getElementById('combosGrid');
+      if (combos.length === 0) {
+        grid.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">No combinations available</div>';
+        section.style.display = 'block';
+        return;
+      }
+      let html = '';
+      const stake = parseFloat(document.getElementById('comboStake').value) || 5;
+      combos.forEach((combo,index)=>{
+        const potentialWin = stake * parseFloat(combo.odds);
+        html += `
+          <div class="combo-card">
+            <div class="combo-matches">
+              ${combo.matches.map(bet=>`${bet.match.teams.home.abbr || bet.match.teams.home.name.slice(0,3)} vs ${bet.match.teams.away.abbr || bet.match.teams.away.name.slice(0,3)}: ${bet.selection}`).join('<br>')}
+            </div>
+            <div class="combo-odds">Total Odds: ${combo.odds}</div>
+            <div style="font-size:12px;color:#888;">Potential Win: €${potentialWin.toFixed(2)}</div>
+            <div class="combo-stake">
+              <input type="number" value="${stake}" min="1" max="1000" onchange="updateComboWin(${index}, this.value)">
+              <button onclick="addComboToBetSlip(${index})" class="btn-small">Add to Bet Slip</button>
+            </div>
+          </div>
+        `;
+      });
+      grid.innerHTML = html;
+      section.style.display = 'block';
+    }
+
+    // Load games from API
+    async function loadGames() {
+      const output = document.getElementById('output');
+      output.innerHTML = '<div class="loading">🔄 Loading European fixtures...</div>';
+      const selectedLeague = document.getElementById('leagueSelect').value;
+      const date = document.getElementById('dateInput').value;
+      const country = document.getElementById('countrySelect').value;
+      const sport = currentSport;
+      try {
+        const params = new URLSearchParams({ date, sport });
+        if (selectedLeague) {
+          if (selectedLeague.includes('soccer_')) { params.append('league', selectedLeague.replace('soccer_', '')); params.set('sport','soccer'); }
+          else if (selectedLeague.includes('basketball_')) { params.append('league', selectedLeague.replace('basketball_', '')); params.set('sport','basketball'); }
+          else params.append('league', selectedLeague);
+        }
+        if (country) params.append('country', country);
+        const res = await fetch(`/api/fixtures?${params}`);
+        if (!res.ok) throw new Error(`API returned ${res.status}`);
+        const data = await res.json();
+        const fixtures = data.fixtures || [];
+        const groupedFixtures = groupFixturesByLeague(fixtures);
+        if (fixtures.length === 0) {
+          output.innerHTML = `
+            <div class="no-games">
+              <h3>No European Fixtures Found</h3>
+              <p>No ${sport} matches scheduled for ${date}${selectedLeague ? ' in selected league' : ''}.</p>
+              <p>Try a different date or select another league.</p>
+              <div style="margin-top:20px;color:#00ff00;">Current C.A. Time: ${getCATime()}</div>
+            </div>
+          `;
+          return;
+        }
+        displayFixtures(groupedFixtures, sport);
+      } catch (err) {
+        console.error('Error loading games:', err);
+        output.innerHTML = `
+          <div class="no-games">
+            <h3>⚠️ Connection Error</h3>
+            <p>Failed to fetch data from API.</p>
+            <button onclick="loadGames()" style="margin-top:15px;">
+              🔄 Retry Connection
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    function groupFixturesByLeague(fixtures) {
+      const groups = {};
+      fixtures.forEach(fixture => {
+        const key = fixture.league?.country || fixture.league?.name || 'Unknown League';
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(fixture);
+      });
+      return groups;
+    }
+
+    function displayFixtures(groupedFixtures, sport) {
+      const output = document.getElementById('output');
+      let html = `<div style="color:#888;margin-bottom:20px;text-align:center;">
+        ⏰ Current C.A. Time: ${getCATime()} | Showing ${Object.keys(groupedFixtures).length} league groups
+      </div>`;
+      selectedMatches.clear();
+      for (const [groupName, fixtures] of Object.entries(groupedFixtures)) {
+        html += `<div class="league-group">
+          <div class="league-group-header">
+            <strong>${groupName}</strong> <span style="color:#888;font-size:12px;">(${fixtures.length} matches)</span>
+          </div>
+          <div class="games-list">`;
+        fixtures.forEach(fixture => {
+          const isSoccer = fixture.sport === 'soccer' || !fixture.sport;
+          html += renderGameCard(fixture, isSoccer);
+          selectedMatches.set(String(fixture.id), fixture);
+        });
+        html += `</div></div>`;
+      }
+      output.innerHTML = html;
+    }
+
+    // Render single game card (includes analysis and details toggle)
+    function renderGameCard(game, isSoccer = true) {
+      const analysis = computeMatchAnalysis(game, isSoccer);
+      const homeStats = game.stats?.home || getDefaultStats();
+      const awayStats = game.stats?.away || getDefaultStats();
+      const homeForm = game.form?.home || ['-', '-', '-', '-', '-'];
+      const awayForm = game.form?.away || ['-', '-', '-', '-', '-'];
+      const odds = parseOddsFromGame(game) || [
+        { value: "Home", odd: 1.85 },
+        { value: "Draw", odd: 3.50 },
+        { value: "Away", odd: 4.20 }
+      ];
+      const sportClass = isSoccer ? 'soccer' : 'basketball';
+      const sportBadge = isSoccer ? '<span class="sport-badge soccer-badge">⚽</span>' : '<span class="sport-badge basketball-badge">🏀</span>';
+      const pbHome = analysis.probabilities.home;
+      const pbDraw = analysis.probabilities.draw;
+      const pbAway = analysis.probabilities.away;
+      const probabilityBar = `
+        <div style="margin-top:10px;">
+          <div class="probability-bar">
+            <div class="probability-home" style="width:${Math.max(1,pbHome)}%"></div>
+            <div class="probability-draw" style="width:${Math.max(1,pbDraw)}%"></div>
+            <div class="probability-away" style="width:${Math.max(1,pbAway)}%"></div>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:12px; color:#888;">
+            <div>H: ${pbHome.toFixed(1)}%</div>
+            <div>D: ${pbDraw.toFixed(1)}%</div>
+            <div>A: ${pbAway.toFixed(1)}%</div>
+          </div>
+        </div>
+      `;
+      const matchId = String(game.id);
+      // odds implied probabilities (normalized)
+      const implied = oddsToImpliedProbabilities(odds.map(o => ({ label: o.value, odd: o.odd })));
+      return `
+        <div class="game-card ${sportClass}" id="game-${matchId}">
+          <div class="game-header">
+            <div class="league">
+              ${sportBadge} ${game.league.country ? `${game.league.country}: ` : ''}${game.league.name}
+            </div>
+            <div class="time">${formatTime(game.fixture?.date)}</div>
+          </div>
+          
+          <div class="teams">
+            <div class="team">
+              ${game.teams.home.logo ? `<img src="${game.teams.home.logo}" class="team-logo">` : ''}
+              <div class="team-name">${game.teams.home.name}</div>
+              <div class="form">${homeForm.map(result => `<span class="form-box ${getFormClass(result)}">${result}</span>`).join('')}</div>
+            </div>
+            
+            <div class="vs">VS<br><span style="font-size:12px;color:#888;">${formatTime(game.fixture?.date)}</span></div>
+            
+            <div class="team">
+              ${game.teams.away.logo ? `<img src="${game.teams.away.logo}" class="team-logo">` : ''}
+              <div class="team-name">${game.teams.away.name}</div>
+              <div class="form">${awayForm.map(result => `<span class="form-box ${getFormClass(result)}">${result}</span>`).join('')}</div>
+            </div>
+          </div>
+          
+          ${isSoccer ? renderSoccerOdds(game, odds, analysis) : renderBasketballOdds(game, odds, analysis)}
+          
+          ${isSoccer ? renderSoccerStats(homeStats, awayStats) : renderBasketballStats(game)}
+          
+          <div class="advice">
+            <div class="advice-title">📊 AI PREDICTION ANALYSIS</div>
+            <div class="advice-text">${analysis.advice}</div>
+            ${probabilityBar}
+            <div style="display:flex; align-items:center; margin-top:15px;">
+              <span class="recommendation">${analysis.recommendation}</span>
+              <span class="confidence" style="color:${getConfidenceColor(analysis.confidence)}">Confidence: ${analysis.confidence}%</span>
+              <button class="show-details-btn" onclick="toggleAnalysis('${matchId}')">Model details</button>
+            </div>
+            <div style="margin-top:8px;font-size:11px;color:#777;">
+              Model blend: Odds ${Math.round(analysis.weights.odds*100)}% / Elo ${Math.round(analysis.weights.elo*100)}% / Poisson ${Math.round(analysis.weights.poisson*100)}%
+            </div>
+            <div id="analysis-${matchId}" class="analysis-details">${formatAnalysisDetails(analysis)}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Toggle analysis details visibility
+    function toggleAnalysis(matchId) {
+      const el = document.getElementById(`analysis-${matchId}`);
+      if (!el) return;
+      el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+    }
+
+    // Pretty format analysis for display
+    function formatAnalysisDetails(analysis) {
+      const parts = [];
+      parts.push(`Probabilities (H/D/A): ${analysis.probabilities.home.toFixed(2)}% / ${analysis.probabilities.draw.toFixed(2)}% / ${analysis.probabilities.away.toFixed(2)}%`);
+      parts.push(`Weights -> Odds: ${analysis.weights.odds}, Elo: ${analysis.weights.elo}, Poisson: ${analysis.weights.poisson}`);
+      parts.push(`Confidence: ${analysis.confidence}%`);
+      parts.push(`Recommendation: ${analysis.recommendation}`);
+      parts.push('');
+      // include JSON of components if present
+      try {
+        if (analysis._components) {
+          parts.push('Components:');
+          parts.push(JSON.stringify(analysis._components, null, 2));
+        }
+      } catch {}
+      return parts.join('\n');
+    }
+
+    // Parse odds robustly
+    function parseOddsFromGame(game) {
+      try {
+        const bookmakers = game.odds?.bookmakers || [];
+        if (!bookmakers.length) return null;
+        for (const b of bookmakers) {
+          const bet = (b.bets || []).find(bb => bb.values && bb.values.length);
+          if (!bet) continue;
+          const values = bet.values.map(v => {
+            const candidates = [v.odd, v.odd_value, v.price, v.price_value, v.decimal, v.priceDecimal, v.value];
+            const found = candidates.find(x => x !== undefined && x !== null);
+            const numeric = Number(found);
+            const label = v.value || v.name || (v.label || '');
+            return { value: label, odd: Number.isFinite(numeric) ? numeric : NaN };
+          }).filter(x => Number.isFinite(x.odd) && x.odd > 1e-6);
+          if (values.length > 0) return values;
+        }
+        return null;
+      } catch (e) {
+        console.warn('parseOddsFromGame error', e);
+        return null;
+      }
+    }
+
+    // Convert odds -> normalized implied probabilities (labels preserved)
+    function oddsToImpliedProbabilities(oddsArray) {
+      const implied = {};
+      let sum = 0;
+      oddsArray.forEach(o => {
+        const odd = Number(o.odd);
+        if (!isFinite(odd) || odd <= 0) return;
+        const p = 1 / odd;
+        implied[o.label] = p;
+        sum += p;
+      });
+      if (sum === 0) {
+        // fallback: even split among present labels
+        const keys = oddsArray.map(o => o.label);
+        const even = 100 / Math.max(1, keys.length);
+        const out = {};
+        keys.forEach(k => out[k] = even);
+        return out;
+      }
+      Object.keys(implied).forEach(k => implied[k] = (implied[k] / sum) * 100);
+      return implied;
+    }
+
+    // Render soccer odds (show implied)
+    function renderSoccerOdds(game, odds, analysis) {
+      const matchId = String(game.id);
+      const oddsList = odds.map(o => ({ label: o.value, odd: parseFloat(o.odd) }));
+      const implied = oddsToImpliedProbabilities(oddsList);
+      return `
+        <div class="odds-section">
+          <div class="odds-title">🎯 BETTING ODDS</div>
+          <div class="odds-grid">
+            ${oddsList.map(odd => `
+              <div class="odd-box" onclick="toggleMatchSelection('${matchId}', '${odd.label}', '${odd.odd}')" id="odd-${matchId}-${sanitizeKey(odd.label)}">
+                <div class="odd-label">${odd.label}</div>
+                <div class="odd-value">${odd.odd}</div>
+                <div class="odd-probability">${(implied[odd.label] || calculateProbability(odd.odd)).toFixed(1)}%</div>
+              </div>
+            `).join('')}
+          </div>
+          ${game.odds?.bookmakers?.[0]?.name ? `<div style="font-size:10px;color:#666;text-align:center;margin-top:5px;">Odds from: ${game.odds.bookmakers[0].name}</div>` : ''}
+        </div>
+        <div style="margin-top:8px;">
+          <div style="font-size:12px;color:#aaa;">Model probabilities (H / D / A): ${analysis.probabilities.home.toFixed(1)}% / ${analysis.probabilities.draw.toFixed(1)}% / ${analysis.probabilities.away.toFixed(1)}%</div>
+        </div>
+      `;
+    }
+
+    // Render basketball odds (moneyline)
+    function renderBasketballOdds(game, odds, analysis) {
+      const matchId = String(game.id);
+      // fallback odds if none
+      const basketballOdds = [
+        { value: game.teams.home.name, odd: 1.75 },
+        { value: game.teams.away.name, odd: 2.10 }
+      ];
+      return `
+        <div class="odds-section">
+          <div class="odds-title">🎯 BETTING ODDS</div>
+          <div class="odds-grid">
+            ${basketballOdds.map(odd => `
+              <div class="odd-box" onclick="toggleMatchSelection('${matchId}', '${odd.value}', '${odd.odd}')" id="odd-${matchId}-${sanitizeKey(odd.value)}">
+                <div class="odd-label">${odd.value.length > 15 ? odd.value.substring(0,12) + '...' : odd.value}</div>
+                <div class="odd-value">${odd.odd}</div>
+                <div class="odd-probability">${calculateProbability(odd.odd)}%</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // Render soccer stats block
+    function renderSoccerStats(homeStats, awayStats) {
+      return `
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-label">Goals/Game</div>
+            <div class="stat-value">
+              <span class="stat-home">${homeStats.goalsScored || homeStats.goals_for || '1.4'}</span>
+              <span class="stat-away">${awayStats.goalsScored || awayStats.goals_for || '1.2'}</span>
+            </div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Conceded/Game</div>
+            <div class="stat-value">
+              <span class="stat-home">${homeStats.goalsConceded || homeStats.goals_against || '1.2'}</span>
+              <span class="stat-away">${awayStats.goalsConceded || awayStats.goals_against || '1.3'}</span>
+            </div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Win Rate</div>
+            <div class="stat-value">
+              <span class="stat-home">${homeStats.winRate || 40}%</span>
+              <span class="stat-away">${awayStats.winRate || 35}%</span>
+            </div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Clean Sheets</div>
+            <div class="stat-value">
+              <span class="stat-home">${homeStats.cleanSheets || 30}%</span>
+              <span class="stat-away">${awayStats.cleanSheets || 25}%</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Render basketball stats
+    function renderBasketballStats(game) {
+      return `
+        <div class="stats basketball-stat">
+          <div class="stat">
+            <div class="stat-label">Avg Points</div>
+            <div class="stat-value">
+              <span class="stat-home">${game.stats?.home?.ppg || 'N/A'}</span>
+              <span class="stat-away">${game.stats?.away?.ppg || 'N/A'}</span>
+            </div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Avg Allowed</div>
+            <div class="stat-value">
+              <span class="stat-home">${game.stats?.home?.papg || 'N/A'}</span>
+              <span class="stat-away">${game.stats?.away?.papg || 'N/A'}</span>
+            </div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Win %</div>
+            <div class="stat-value">
+              <span class="stat-home">${game.stats?.home?.winRate || 'N/A'}</span>
+              <span class="stat-away">${game.stats?.away?.winRate || 'N/A'}</span>
+            </div>
+          </div>
+          ${game.scores ? `
+            <div class="stat">
+              <div class="stat-label">Last Match</div>
+              <div class="stat-value">
+                <span class="stat-home">${game.scores.home}</span>
+                <span class="stat-away">${game.scores.away}</span>
+              </div>
+            </div>
+          ` : ''}
+        </div>
+        ${game.quarterScores ? `
+          <div class="quarter-scores">
+            ${game.quarterScores.map((score, i) => `<div class="quarter-score">Q${i+1}: ${score.home}-${score.away}</div>`).join('')}
+          </div>
+        ` : ''}
+      `;
+    }
+
+    // Helpers and models
+
+    function getFormClass(result) {
+      if (result === 'W') return 'W';
+      if (result === 'D') return 'D';
+      if (result === 'L') return 'L';
+      return '';
+    }
+
+    function getConfidenceColor(confidence) {
+      if (confidence >= 70) return '#00ff00';
+      if (confidence >= 50) return '#ffaa00';
+      return '#ff4444';
+    }
+
+    function getDefaultStats() {
+      return { goalsScored: "1.4", goalsConceded: "1.3", winRate: 40, cleanSheets: 30, bttsRate: 60 };
+    }
+
+    // Compute match analysis using ensemble of models with robust fallbacks
+    function computeMatchAnalysis(game, isSoccer=true) {
+      // Odds
+      const oddsParsed = parseOddsFromGame(game);
+      let oddsProbs = null;
+      if (oddsParsed && oddsParsed.length) {
+        oddsProbs = mapOddsArrayToHDA(oddsParsed);
+      }
+      // Elo
+      const eloProbs = computeEloProbabilities(game);
+      // Poisson
+      const poissonProbs = isSoccer ? computePoissonProbabilities(game) : { home: eloProbs.home, draw: eloProbs.draw || 0, away: eloProbs.away };
+
+      // weights - dynamic
+      const weights = { odds: 0.5, elo: 0.25, poisson: 0.25 };
+      if (!oddsProbs) { weights.odds = 0; weights.elo = 0.6; weights.poisson = 0.4; }
+      if (game.stats?.home && game.stats?.away) { weights.poisson += 0.05; weights.elo -= 0.05; }
+
+      const denom = weights.odds + weights.elo + weights.poisson;
+      const combined = {
+        home: ((oddsProbs?.home || 0) * weights.odds + eloProbs.home * weights.elo + poissonProbs.home * weights.poisson) / denom,
+        draw: ((oddsProbs?.draw || 0) * weights.odds + (eloProbs.draw || 0) * weights.elo + poissonProbs.draw * weights.poisson) / denom,
+        away: ((oddsProbs?.away || 0) * weights.odds + eloProbs.away * weights.elo + poissonProbs.away * weights.poisson) / denom
+      };
+
+      const sum = combined.home + combined.draw + combined.away;
+      if (sum > 0) {
+        combined.home = (combined.home / sum) * 100;
+        combined.draw = (combined.draw / sum) * 100;
+        combined.away = (combined.away / sum) * 100;
+      } else {
+        combined.home = combined.draw = combined.away = 33.3333;
+      }
+
+      // confidence: margin between top two * dataStrength
+      const sorted = [{k:'home',v:combined.home},{k:'draw',v:combined.draw},{k:'away',v:combined.away}].sort((a,b)=>b.v-a.v);
+      const margin = sorted[0].v - sorted[1].v;
+      let dataStrength = 1;
+      if (game.stats?.home && game.stats?.away) dataStrength += 0.5;
+      if (oddsProbs) dataStrength += 0.5;
+      const confidence = Math.min(95, Math.round(Math.max(15, margin * 1.6) * dataStrength));
+
+      const advice = generateAdviceText(game, combined, oddsProbs, eloProbs, poissonProbs);
+      const top = sorted[0];
+      const recText = top.k === 'home' ? `Back Home (${top.v.toFixed(1)}%)` : top.k === 'away' ? `Back Away (${top.v.toFixed(1)}%)` : `Back Draw (${top.v.toFixed(1)}%)`;
+
+      // attach raw components for debug UI
+      const analysis = {
+        probabilities: combined,
+        recommendation: recText,
+        confidence,
+        advice,
+        weights,
+        _components: { oddsProbs, eloProbs, poissonProbs }
+      };
+      return analysis;
+    }
+
+    // Map odds array to H/D/A; handles 2-way or 3-way markets
+    function mapOddsArrayToHDA(oddsArr) {
+      if (!oddsArr || !oddsArr.length) return null;
+      const normalized = oddsArr.map(o => ({ label: String(o.value).toLowerCase(), odd: Number(o.odd) })).filter(o => Number.isFinite(o.odd) && o.odd > 0);
+      if (normalized.length < 2) return null;
+      const drawItem = normalized.find(o => /\b(draw|x|tie)\b/.test(o.label));
+      if (normalized.length >= 3) {
+        const byLabel = normalized;
+        let home=null, draw=null, away=null;
+        if (drawItem) {
+          const others = byLabel.filter(x => x !== drawItem);
+          home = others[0]; away = others[1] || others[0]; draw = drawItem;
+        } else {
+          home = byLabel[0]; draw = byLabel[1]; away = byLabel[2] || byLabel[1];
+        }
+        const items = [{k:'home',o:home},{k:'draw',o:draw},{k:'away',o:away}].filter(x=>x.o && Number.isFinite(x.o.odd));
+        if (!items.length) return null;
+        let sum = 0; const tmp = {};
+        items.forEach(it => { const p = 1/it.o.odd; tmp[it.k] = p; sum += p; });
+        Object.keys(tmp).forEach(k => tmp[k] = (tmp[k]/sum)*100);
+        return { home: tmp.home || 0, draw: tmp.draw || 0, away: tmp.away || 0 };
+      } else {
+        const a = normalized[0], b = normalized[1];
+        const pA = 1/a.odd, pB = 1/b.odd;
+        const total = pA + pB;
+        return { home: (pA/total)*100, draw: 0, away: (pB/total)*100 };
+      }
+    }
+
+    // Elo-based probabilities with home advantage
+    function computeEloProbabilities(game) {
+      const lookupRating = t => {
+        if (!t) return null;
+        const candidates = [t.elo, t.eloRating, t.rating, t.power, t.rank, t.rankPower];
+        for (const c of candidates) { const v = Number(c); if (Number.isFinite(v)) return v; }
+        return null;
+      };
+      const homeBase = lookupRating(game.teams.home) ?? 1500;
+      const awayBase = lookupRating(game.teams.away) ?? 1500;
+      const HOME_ADV = 60;
+      const homeRating = homeBase + HOME_ADV;
+      const awayRating = awayBase;
+      const expectedHome = 1 / (1 + Math.pow(10, (awayRating - homeRating) / 400));
+      const expectedAway = 1 - expectedHome;
+      const drawBaseline = 0.26;
+      const drawFactor = drawBaseline * Math.exp(-Math.abs(homeRating-awayRating)/600);
+      const remain = Math.max(0, 1 - drawFactor);
+      const homeProb = remain * expectedHome;
+      const awayProb = remain * expectedAway;
+      return { home: homeProb*100, draw: drawFactor*100, away: awayProb*100 };
+    }
+
+    // Poisson model (lightweight)
+    function computePoissonProbabilities(game) {
+      const homeStats = game.stats?.home || {};
+      const awayStats = game.stats?.away || {};
+      const homeGF = Number(homeStats.goalsScored) || Number(homeStats.goals_for) || 1.45;
+      const homeGA = Number(homeStats.goalsConceded) || Number(homeStats.goals_against) || 1.25;
+      const awayGF = Number(awayStats.goalsScored) || Number(awayStats.goals_for) || 1.25;
+      const awayGA = Number(awayStats.goalsConceded) || Number(awayStats.goals_against) || 1.35;
+      const HFA = 1.08;
+      const lambdaHome = ((homeGF + awayGA) / 2) * HFA;
+      const lambdaAway = ((awayGF + homeGA) / 2);
+      const maxG = 6;
+      const pmfHome = [], pmfAway = [];
+      for (let k=0;k<=maxG;k++) { pmfHome[k] = poissonP(k, lambdaHome); pmfAway[k] = poissonP(k, lambdaAway); }
+      let pH=0,pD=0,pA=0;
+      for (let i=0;i<=maxG;i++){ for (let j=0;j<=maxG;j++){ const prob = pmfHome[i]*pmfAway[j]; if (i>j) pH+=prob; else if (i===j) pD+=prob; else pA+=prob; } }
+      const total = pH + pD + pA;
+      if (!total || !isFinite(total)) return { home:33.3, draw:33.3, away:33.3 };
+      return { home:(pH/total)*100, draw:(pD/total)*100, away:(pA/total)*100 };
+    }
+
+    function poissonP(k, lambda) { return Math.exp(-lambda) * Math.pow(lambda, k) / factorial(k); }
+    function factorial(n) { if (n<=1) return 1; let r=1; for (let i=2;i<=n;i++) r*=i; return r; }
+
+    // Advice generation (explainable)
+    function generateAdviceText(game, combined, oddsProbs, eloProbs, poissonProbs) {
+      const home = combined.home.toFixed(1), draw = combined.draw.toFixed(1), away = combined.away.toFixed(1);
+      const top = Object.entries(combined).sort((a,b)=>b[1]-a[1])[0];
+      const lines = [];
+      lines.push(`Ensemble predicts: Home ${home}% • Draw ${draw}% • Away ${away}%.`);
+      if (oddsProbs) lines.push(`Bookmaker-implied: H ${Math.round(oddsProbs.home)}% / D ${Math.round(oddsProbs.draw)}% / A ${Math.round(oddsProbs.away)}%.`);
+      lines.push(`Elo: H ${Math.round(eloProbs.home)}% / D ${Math.round(eloProbs.draw)}% / A ${Math.round(eloProbs.away)}%.`);
+      lines.push(`Poisson: H ${Math.round(poissonProbs.home)}% / D ${Math.round(poissonProbs.draw)}% / A ${Math.round(poissonProbs.away)}%.`);
+      const rec = top[0]==='home' ? `Lean to Home — ${home}%` : top[0]==='away' ? `Lean to Away — ${away}%` : `Lean to Draw — ${draw}%`;
+      lines.push(rec);
+      lines.push('Blends market odds with statistical models. Use risk management.');
+      return lines.join(' ');
+    }
+
+    // Utility: naive conversion of odd to probability %
+    function calculateProbability(odds) {
+      const o = Number(odds);
+      if (!o || o <= 0) return 0;
+      return (100 / o);
+    }
+
+    // Auto-refresh every 2 minutes (on minute 0,2,4...)
+    setInterval(()=> {
+      const now = new Date();
+      if (now.getMinutes() % 2 === 0 && now.getSeconds() === 0) {
+        console.log('Auto-refreshing data...');
+        loadGames();
+      }
+    }, 60000);
+
+    // Initialize
+    window.onload = loadGames;
+    document.getElementById('stakeAmount').addEventListener('input', updatePotentialWin);
+  </script>
+</body>
+</html>
